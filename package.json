@@ -1,0 +1,24 @@
+{
+  "name": "opencomputers-type-decalration",
+  "version": "1.0.0",
+  "description": "A TypeScript binding for OpenComputers API (Including integrations)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fan87/OpenComputers-Type-Declaration.git"
+  },
+  "keywords": [
+    "lua",
+    "opencomputers",
+    "typescripttolua"
+  ],
+  "author": "fan87",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/fan87/OpenComputers-Type-Declaration/issues"
+  },
+  "homepage": "https://github.com/fan87/OpenComputers-Type-Declaration#readme"
+}
