@@ -20,6 +20,16 @@
  * @author fan87
  */
 
+/**
+ * The first return value will always be false, and the second return value will be the reason (`java.lang.Throwable#getMessage()`)
+ * The reason why it's named `InternalError` is because if the bound method throws an exception (Java side), it will return false and a reason message
+ */
+type InternalError = LuaMultiReturn<[false, string]>
+type UUID = string
+/**
+ * Position vector object that's used by some mods
+ */
+interface Vector3 {x: number, y: number, z: number}
 
 /** 
  * @noSelf 
@@ -636,7 +646,7 @@ declare module "uuid" {
      * Returns 128 bit random identifiers, represented as a hex value in a string grouped by 8, 4, 4, 4, and 12 hex characters, separated by dashes.
      * e.g. `34eb7b28-14d3-4767-b326-dd1609ba92e`. You might recognize this pattern as it is the same used for component addressing.
      */
-    export function next(): string
+    export function next(): UUID
 }
 
 /**
@@ -669,8 +679,8 @@ declare module "internet" {
  */
 declare module "thread" {
     export function create(thread_proc: () => any): ThreadHandle
-    export function waitForAll(threads: ThreadHandle, timeout?: number): LuaMultiReturn<[boolean, string]>
-    export function waitForAny(threads: ThreadHandle, timeout?: number): LuaMultiReturn<[boolean, string]>
+    export function waitForAll(threads: ThreadHandle, timeout?: number): InternalError
+    export function waitForAny(threads: ThreadHandle, timeout?: number): InternalError
     export function current(): ThreadHandle
 
     interface ThreadHandle {
@@ -678,12 +688,12 @@ declare module "thread" {
          * Resumes (or thaws) a suspended thread. Returns success and an error message on failure. A thread begins its life already in a running state and thus basic thread workflows will not ever need to call `t:resume()`. A “running” thread will autonomously continue until it completes. `t:resume()` is only necessary to resume a thread that has been suspended(`t:suspend()`). **Note** that because you are not directly resuming the thread any exceptions thrown from the thread are absorbed by the threading library and not exposed to your process.
          * - At this time there is no way to hook in an exception handler for threads but for now `event.onError` is used to print the error message to “/tmp/event.log”. Please note that currently the hard interrupt exception is only thrown once, and the behavior of a process with threads when a hard interrupt is thrown is unspecified. At this time, any one of the threads or the parent process may take the exception. These details are not part of the specification for threads and any part of this implementation detail may change later.
          */
-        resume(this: any): LuaMultiReturn<[boolean, string]>;
+        resume(this: any): InternalError;
         /**
          * Suspends (or freezes) a running thread. Returns success and an error message on failure. A “suspended” thread never autonomously wakes up and dies as soon as its parent process (if attached) closes. A suspended thread ignores events. That means any event listeners or timers created inside the thread will not respond to event notifications. Note that threads do not buffer event signals and a suspended thread may miss event signals it was waiting for. For example, if a thread was last waiting on `event.pull("modem_message")` and is “suspended” and a “modem_message” is received by the computer then the thread will miss the event and never know it happened. Please note that if you suspend a thread that is blocked waiting for an event, it is unspecified which event the thread will receive when it is next resumed.
          * Suspending the current thread causes the thread to immediately yield and does not resume until `t:resume()` is called explicitly elsewhere.
          */
-        suspend(this: any): LuaMultiReturn<[boolean, string]>;
+        suspend(this: any): InternalError;
 
         /**
          * Stabby stab! Kills the thread dead. The thread is terminated and will not continue its thread function. Any event registrations it made will die with it. Keep in mind that the core underlying Lua type is a coroutine which is not a preemptive thread. Thus, the thread's stopping points are deterministic, meaning that you can predict exactly where the thread will stop
@@ -4417,6 +4427,675 @@ interface ComponentMinecraftRecordPlayer extends IComponent {
 }
 
 /////////////////// OpenGlasses (Provided by OpenGlasses) ///////////////////
+
+/////////////// Modifiers ///////////////
+/** 
+ * @noSelf 
+ * @see https://github.com/Starchasers/OCGlasses/wiki/WidgetModifiers
+*/
+interface OGEasing {
+    set(type: OGEasingType, typeIO: OGEasingTypeIO, duration: number, min: number, max: number, mode: OGEasingMode): boolean
+
+    get(): {
+        type: OGEasingType,
+        typeIO: OGEasingTypeIO,
+        duration: number,
+        min: number,
+        max: number,
+        mode: OGEasingMode,
+        progress: number
+    }
+
+    remove(): boolean | InternalError
+}
+/** @noSelf */
+interface OGModifier<T, V extends string> {
+    /**
+     * Removes the widget modifier
+     */
+    remove(): boolean | InternalError
+
+    /**
+     * Returns the modifier type
+     */
+    type(): string
+
+    /**
+     * Returns the current vlaues
+     */
+    get(): T
+
+    /**
+     * Get all easings. The key would be the variable that's being animated, and the value would be the easing object
+     */
+    easings(): LuaTable<V, OGEasing>
+}
+
+///// Impls /////
+
+/** @noSelf */
+interface OGModifierColorData { r: number, g: number, b: number, alpha: number }
+/** @noSelf */
+interface OGModifierColor extends OGModifier<OGModifierColorData, "r" | "g" | "b" | "alpha"> {
+    /**
+     * Sets the new value
+     */
+    set(red: number, green: number, blue: number, alpha?: number): boolean
+}
+
+/** @noSelf */
+interface OGModifierRotateData { deg: number, x: number, y: number, z: number }
+/** @noSelf */
+interface OGModifierRotate extends OGModifier<OGModifierRotateData, "deg" | "x" | "y" | "z"> {
+    /**
+     * Sets the new value
+     */
+    set(deg: number, x: number, y: number, z: number): boolean
+}
+
+/** @noSelf */
+interface OGModifierScaleData { x: number, y: number, z: number }
+/** @noSelf */
+interface OGModifierScale extends OGModifier<OGModifierScaleData, "x" | "y" | "z"> {
+    /**
+     * Sets the new value
+     */
+    set(x: number, y: number, z: number): boolean
+}
+
+/** @noSelf */
+interface OGModifierTranslateData { x: number, y: number, z: number }
+/** @noSelf */
+interface OGModifierTranslate extends OGModifier<OGModifierTranslateData, "x" | "y" | "z"> {
+    /**
+     * Sets the new value
+     */
+    set(x: number, y: number, z: number): boolean
+}
+
+/** @noSelf */
+interface OGModifierAutoTranslateData { x: number, y: number }
+/** @noSelf */
+interface OGModifierAutoTranslate extends OGModifier<OGModifierAutoTranslateData, "x" | "y"> {
+    /**
+     * Sets the new value
+     */
+    set(x: number, y: number): boolean
+}
+
+/////////////// Widget Attributes ///////////////
+
+/**
+ * ### Light
+ * > ⚠️ Requires daylight detector
+ * `IS_LIGHTLEVEL_MIN_[x = 0-15]` - If the light level is at least *x*
+ * `IS_LIGHTLEVEL_MAX_[x = 0-15]` - If the light level is at less than *x*
+ * 
+ * ### Weather
+ * > ⚠️ Requires Tank Upgrade
+ * `IS_WEATHER_[w = "RAIN" | "CLEAR"]` - If the weather is currently *w*
+ * 
+ * ### Swimming
+ * > ⚠️ Requires Motion Upgrade
+ * `IS[c = "_NOT" | ""]_SWIMMING` - If the player is currently *c* swimming
+ * 
+ * ### Sneaking
+ * > ⚠️ Requires Motion Upgrade
+ * `IS[c = "_NOT" | ""]_SNEAKING` - If the player is currently *c* sneaking
+ * 
+ * ### Overlay
+ * `IS[c = "IN" | ""]ACTIVE` - If the overlay is currently *c*active
+ * 
+ * ### Entity Detector
+ * > ⚠️ Can be only applied if it's entity tracker
+ * `IS_FOCUSED_ENTITY` - If the player is aiming at the entity (can hit it by just left clicking)
+ * `IS_FOCUSED_BLOCK` - if the player is aiming at the block
+ * `IS_LIVING` - If the target entity is [living entity](https://hub.spigotmc.org/javadocs/spigot/org/bukkit/entity/LivingEntity.html)
+ * `IS_PLAYER` - If the target entity is player
+ * `IS_NEUTRAL` - If the target entity is neutral entity
+ * `IS_HOSTILE` - If the target entity is hostile entity
+ * `IS_ITEM` - If the target entity is item
+ */
+type ConditionType = "IS_WEATHER_RAIN" | "IS_WEATHER_CLEAR" | "IS_SWIMMING" | "IS_NOT_SWIMMING" | "IS_SNEAKING" | "IS_NOT_SNEAKING" | "OVERLAY_ACTIVE" | "OVERLAY_INACTIVE" | "IS_LIGHTLEVEL_MIN_0" | "IS_LIGHTLEVEL_MIN_1" | "IS_LIGHTLEVEL_MIN_2" | "IS_LIGHTLEVEL_MIN_3" | "IS_LIGHTLEVEL_MIN_4" | "IS_LIGHTLEVEL_MIN_5" | "IS_LIGHTLEVEL_MIN_6" | "IS_LIGHTLEVEL_MIN_7" | "IS_LIGHTLEVEL_MIN_8" | "IS_LIGHTLEVEL_MIN_9" | "IS_LIGHTLEVEL_MIN_10" | "IS_LIGHTLEVEL_MIN_11" | "IS_LIGHTLEVEL_MIN_12" | "IS_LIGHTLEVEL_MIN_13" | "IS_LIGHTLEVEL_MIN_14" | "IS_LIGHTLEVEL_MIN_15" | "IS_LIGHTLEVEL_MAX_0" | "IS_LIGHTLEVEL_MAX_1" | "IS_LIGHTLEVEL_MAX_2" | "IS_LIGHTLEVEL_MAX_3" | "IS_LIGHTLEVEL_MAX_4" | "IS_LIGHTLEVEL_MAX_5" | "IS_LIGHTLEVEL_MAX_6" | "IS_LIGHTLEVEL_MAX_7" | "IS_LIGHTLEVEL_MAX_8" | "IS_LIGHTLEVEL_MAX_9" | "IS_LIGHTLEVEL_MAX_10" | "IS_LIGHTLEVEL_MAX_11" | "IS_LIGHTLEVEL_MAX_12" | "IS_LIGHTLEVEL_MAX_13" | "IS_LIGHTLEVEL_MAX_14" | "IS_LIGHTLEVEL_MAX_15" | "IS_FOCUSED_ENTITY" | "IS_FOCUSED_BLOCK" | "IS_LIVING" | "IS_HOSTILE" | "IS_NEUTRAL" | "IS_PLAYER" | "IS_ITEM"
+
+/**
+ * Easings IO Type. For preview, you can go [`easings.net`](https://easings.net/)
+ */
+type OGEasingTypeIO = "IN" | "OUT" | "INOUT"
+/**
+ * Easings Function. For preview, you can go [`easings.net`](https://easings.net/)
+ */
+type OGEasingType = "BACK" | "BOUNCE" | "CIRC" | "CUBIC" | "ELASTIC" | "EXPO" | "LINEAR" | "QUAD" | "QUART" | "QUINT" | "SINE"
+/**
+ * `DEFAULT`: Only run once
+ * `LOOP`: Back and forth
+ * `REPEAT`: Repeat the easing
+ */
+type OGEasingMode = "DEFAULT" | "LOOP" | "REPEAT"
+type OGModifierVariableName = "x" | "y" | "z" | "r" | "g" | "b" | "alpha" | "deg"
+type OGModifierId<T extends OGModifier<any, any>> = number
+
+/** @noSelf */
+interface OGIWidget {
+
+    /**
+     * Get the ID of the widget (Even if it's already removed)
+     */
+    getId(): number
+    /**
+     * Check the widget's visibility
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    isVisible(): boolean | InternalError
+    /**
+     * Set the widget's visibility
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setVisible(visible: boolean): void | InternalError
+    // (I'm not stupid, I know how inherit works ty don't open a pr or issue for this)
+    // I added all those types so people know what modifier types there are 
+    /**
+     * List all modifiers
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    modifiers <T, V extends string> (): OGModifier<T, V>[] | OGModifierAutoTranslate[] | OGModifierColor[] | OGModifierRotate[] | OGModifierScale[] | OGModifierTranslate[] | InternalError
+    /**
+     * Remove the widget
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    removeWidget(): boolean | InternalError
+    /**
+     * Add a color modifier
+     * @error Throws internal error of the widget is removed or doesn't exist
+     * @return ID/number of the modifier
+     */
+    addColor(r: number, g: number, b: number, a?: number): OGModifierId<OGModifierColor> | InternalError
+    /**
+     * Add a translation modifier
+     * @error Throws internal error of the widget is removed or doesn't exist
+     * @return ID/number of the modifier
+     */
+    addTranslation(x: number, y: number, z: number): OGModifierId<OGModifierTranslate> | InternalError
+    /**
+     * Add a rotation modifier
+     * @error Throws internal error of the widget is removed or doesn't exist
+     * @return ID/number of the modifier
+     */
+    addRotation(deg: number, x: number, y: number, z: number): OGModifierId<OGModifierRotate> | InternalError
+    /**
+     * Add a scale modifier
+     * @error Throws internal error of the widget is removed or doesn't exist
+     * @return ID/number of the modifier
+     */
+    addScale(x: number, y: number, z: number): OGModifierId<OGModifierScale> | InternalError
+    /**
+     * Remove a modifier by ID
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    removeModifier(id: OGModifierId<any> | number): void | InternalError
+    /**
+     * Returns list of all modifiers.
+     * Layout:
+     * 
+     * modifier1: any[]     (array index 0)
+     *      id: number                  (array index 0)
+     *      type: string                (array index 1)
+     *      values: any[]               (array index 2)
+     *          *unknown*                   (array index 0)
+     *      condition: ConditionType[]  (array index 3) // Condition names
+     * 
+     * @error Throws internal error of the widget is removed or doesn't exist
+     * @deprecated Please use `modifiers()` instead for better typing
+     */
+    getModifiers(): any[][] | InternalError
+    /**
+     * Set the condition of a modifier to be applied
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setCondition(modifierId: OGModifierId<any> | number, condition: ConditionType, state: boolean): void | InternalError
+    /**
+     * Set the easing function of a modifier
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setEasing <V extends string> (modifierId: OGModifierId<OGModifier<any, V>>, type: OGEasingType, typeIO: OGEasingTypeIO, duration: number, variableName: V): void | InternalError
+    /**
+     * Remove an easing
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    removeEasing <V extends string> (modifierId: OGModifierId<OGModifier<any, V>>, variableName: OGModifierVariableName): void | InternalError
+    /**
+     * Get the current color value.
+     * @error Throws internal error of the widget is removed or doesn't exist
+     * @deprecated Please use `modifiers()[id - 1]` instead for better typing
+     */
+    getColor(modifierId: OGModifierId<OGModifierColor>): LuaMultiReturn<[number, number, number, number]>
+    /**
+     * 
+     * @error Throws internal error of the widget is removed or doesn't exist
+     * @deprecated Please use `modifiers()[id - 1]` instead for better typing
+     */
+    updateModifier(modifierId: OGModifierId<any> | number, values: number[]): boolean | InternalError
+    /**
+     * Get the real rendering position after translate, auto translate, scale, and rotate
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    getRenderPosition(playerName: string, width: number, height: number): Vector3 | InternalError
+}
+
+/** @noSelf */
+interface OGIAutoTranslateable extends OGIWidget {
+    /**
+     * Add an auto translate modifier
+     * @error Throws internal error of the widget is removed or doesn't exist
+     * @return ID/number of the modifier
+     */
+    addAutoTranslation(x: number, y: number): OGModifierId<OGModifierAutoTranslate> | InternalError
+}
+
+/** @noSelf */
+interface OGIAlignable extends OGIWidget {
+    /**
+     * Set the horizontal align
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setHorizontalAlign(align: "LEFT" | "CENTER" | "RIGHT"): void | InternalError
+    /**
+     * 
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setVerticalAlign(align: "TOP" | "MIDDLE" | "BOTTOM"): void | InternalError
+}
+
+/** @noSelf */
+interface OGITracker extends OGIWidget {
+    /**
+     * Set the tracking type to only certain type of target to be tracked
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setTrackingType(trackingType: "NONE" | "ALL" | "ITEM" | "LIVING" | "PLAYER" | "HOSTILE" | "NEUTRAL" | "UNIQUE", radius: number): void | InternalError
+    /**
+     * Setup a filter, and only tracks entity or items with specific item meta data (ignored if it's entity) and name
+     * Leaving type name empty string i.g. "" will disable the filter
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setTrackingFilter(entityOrItemTypeName: string, itemMetaDataIndex?: number): void | InternalError
+    /**
+     * Add a filter that checks the entity's UUID. Note that the UUID can be player's UUID, which can be obtained [here](https://namemc.com/), and if any mods gives the entity's UUID, you can use them too.
+     * @param entityUUID Entity's UUID. Leaving it empty, "none" or "" will remove the UUID filter
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setTrackingEntity(entityUUID?: UUID | "none"): void | InternalError
+}
+
+/** 
+ * Don't use it if you have completely no idea how computer graphics works
+ * @noSelf 
+*/
+interface OGICustomShape extends OGIWidget {
+    /**
+     * Set the OpenGL rendering mode, currently only has TRIANGLES and TRIANGLE_STRIP
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setGLMODE(mode: "TRIANGLES" | "TRIANGLE_STRIP"): void | InternalError
+    /**
+     * Set the shading to SMOOTH or FLAT
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setShading(shading: "SMOOTH" | "FLAT"): void | InternalError
+    /**
+     * Set the vertex of the vertex index
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setVertex(index: number, x: number, y: number, z: number): void | InternalError
+    /**
+     * Add an vertex
+     * @error Throws internal error of the widget is removed or doesn't exist
+     * @return The vertex's index
+     */
+    addVertex(x: number, y: number, z: number): number | InternalError
+    /**
+     * Remove the vertex by its index
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    removeVertex(index: number): void | InternalError
+    /**
+     * Gets the total amount of vertex
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    getVertexCount(): number | InternalError
+}
+
+/** @noSelf */
+interface OGIObjModel extends OGIWidget {
+    /**
+     * Use an Obj file from a source
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    loadOBJ(source: string): void | InternalError
+}
+
+/** @noSelf */
+interface OGIResizable extends OGIWidget {
+    /**
+     * Get the size of the component.
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    getSize(): LuaMultiReturn<[number, number]> | InternalError
+    /**
+     * Set the size of the component
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setSize(x: number, y: number): void | InternalError
+}
+
+/** @noSelf */
+interface OGITextable extends OGIWidget {
+    /**
+     * Use a TrueType font. Users must have this font installed!
+     * @beta This feature is still in beta
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setFont(fontName: string): void | InternalError
+    /**
+     * Set the text
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setText(text: string | boolean): void | InternalError
+    /**
+     * Get the text
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    getText(): string | InternalError
+    /**
+     * Set the anti alias state
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setAntialias(antialias: boolean): void | InternalError
+    /**
+     * Set the font size of the TrueType font
+     * @see {@link setFont}
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setFontSize(size: number): void | InternalError
+}
+
+/** @noSelf */
+interface OGIItem extends OGIWidget {
+    /**
+     * Set the display item to a specific item with name and meta data
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setItem(itemName: string, metadata?: number): boolean | InternalError
+    /**
+     * Get the item of the widget. Returns the unlocalized name of the item
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    getItem(): string
+}
+
+/** @noSelf */
+interface OGIThroughVisibility extends OGIWidget {
+    /**
+     * Set if the widget is visible through objects
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setVisibleThroughObjects(visibleThroughObjects: boolean): void | InternalError
+    /**
+     * Set if the widget is visible through objects
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    isVisibleThroughObjects(): boolean | InternalError
+}
+
+/** @noSelf */
+interface OGIViewDistance extends OGIWidget {
+    /**
+     * Set the max view distance of the widget
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setViewDistance(distance: number): void | InternalError
+    /**
+     * Get the view distance of the widget
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    getViewDistance(): number | InternalError
+    /**
+     * Set if the component should always be facing the player
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setFaceWidgetToPlayer(faceWidgetToPlayer: boolean): void | InternalError
+}
+
+/** @noSelf */
+interface OGILookable extends OGIWidget {
+    /**
+     * Set which block is the widget facing
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setLookingAt(x: number, y: number, z: number): void | InternalError
+    /**
+     * Enable or disable the widget facing
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setLookingAt(enabled: boolean): void | InternalError
+    /**
+     * Get which block is the widget facing
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    getLookingAt(): LuaMultiReturn<[number, number, number]> | InternalError
+}
+
+
+
+/** @noSelf */
+interface OGIPrivate extends OGIWidget {
+    /**
+     * Set the widget's owner by the username
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    setOwner(playerName: string): void | InternalError
+    /**
+     * Get the widget's owner's player name
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    getOwner(): string | InternalError
+    /**
+     * Get the widget's owner's UUID
+     * @error Throws internal error of the widget is removed or doesn't exist
+     */
+    getOwnerUUID(): UUID | InternalError
+}
+
+/////////////// Widgets Types ///////////////
+
+/** @noSelf */
+interface OGWidgetGLOverlay extends OGIResizable, OGIPrivate {
+    /**
+     * [OpenGL] Set the widget's culling state. For more information, you can [look it up](https://www.google.com/search?q=Culling+OpenGL)
+     * @implNote It was originally in `OGIWidget`, but moved here since internal OpenGlasses checks if it's instance of WidgetGLOverlay
+     * @see https://www.youtube.com/watch?v=BA6aR_5C_BM
+     */
+    setCulling(culling: boolean): void | InternalError
+}
+
+/** @noSelf */
+interface OGWidgetGLWorld extends OGWidgetGLOverlay, OGIThroughVisibility, OGIViewDistance, OGILookable {}
+
+/** @noSelf */
+interface OGTextWidget extends OGWidgetGLWorld, OGITextable, OGIAlignable {}
+
+/** @noSelf */
+interface OGItemIcon extends OGWidgetGLWorld, OGIItem {}
+
+/** @noSelf */
+interface OGCustomShape extends OGWidgetGLWorld, OGICustomShape {}
+
+/** @noSelf */
+interface OGOBJModelOC extends OGWidgetGLWorld, OGIObjModel {}
+
+/////////////// Widgets Components ///////////////
+/** @noSelf */
+interface OGCube3D extends OGWidgetGLWorld {}
+/** @noSelf */
+interface OGText3D extends OGTextWidget {}
+/** @noSelf */
+interface OGText2D extends OGTextWidget, OGIAutoTranslateable {}
+/** @noSelf */
+interface OGItem2D extends OGItemIcon, OGIAutoTranslateable, OGIAlignable {}
+/** @noSelf */
+interface OGItem3D extends OGItemIcon {}
+/** @noSelf */
+interface OGCustom2D extends OGCustomShape, OGIAutoTranslateable {}
+/** @noSelf */
+interface OGCustom3D extends OGCustomShape {}
+/** @noSelf */
+interface OGOBJModel3D extends OGOBJModelOC {}
+/** @noSelf */
+interface OGOBJModel2D extends OGOBJModelOC, OGIAutoTranslateable {}
+/** @noSelf */
+interface OGBox2D extends OGWidgetGLOverlay, OGIAutoTranslateable, OGIAlignable {}
+/** @noSelf */
+interface OGEntityTracker3D extends OGOBJModel3D, OGITracker {}
+
+
+/** @noSelf */
+interface OGRayTracingBlockResult extends Vector3 {
+    type: "block",
+    name: string,
+    meta: number
+}
+/** @noSelf */
+interface OGRayTracingMissedResult {
+    type: "air"
+}
+
+/**
+ * @noSelf
+ */
+interface DComponentOpenGlassesHost extends IComponent {
+    /**
+     * Link with a player / multiple players. By leaving no parameters or "" (empty string) as parameter, it will send start linking with everyone that can be linked by the terminal. Here're rules to connect to the player:
+     * 1. Distance to the player must be less than 64 (Un-configurable)
+     * 2. Player must be wearing Glasses
+     * 3. The player must not be connecting to the terminal already
+     * 4. The link request must not be sent already
+     * @param playerName The player name. Leaving this empty will send link request to everyone that matches the requirement
+     * @return First return value indicates if a request has been sent successfully to the target player. If the player doesn't exist, or it doesn't match the rules mentioned above, it will be false, but if the first parameter is empty, it will always return true. The second return value is an array of all players that is receiving a link request.
+     */
+    startLinking(playerName?: string): LuaMultiReturn<[boolean, string[]]>
+
+    /**
+     * Get all connected players. The return value is in this formatting:
+     * ---- Main Table ----
+     * - player1: any[] (array index 0)
+     *   - name: string         (sub-array index 0)
+     *   - uuid: UUID           (sub-array index 1)
+     *   - screenWidth: number  (sub-array index 2)
+     *   - screenHeight: number (sub-array index 3)
+     *   - guiScale: double     (sub-array index 4)
+     * - player2: any[] (array index 1)
+     *   - name... and so on
+     */
+    getConnectedPlayers(): any[][]
+
+    /**
+     * Request a Screen Resolution Event to be sent to the terminal from the linked glasses of the player(s) specified. It will send a packet to the player, and an event will be fired - which means it depends on the ping and the player's internet connection, if the player is not responding to the packet, you won't get an event back.
+     * @param playerName Name of the player. Leaving it empty or with an empty string will send request to every players that has connected to the terminal.
+     * @return Amount of players that have received the request
+     */
+    requestResolutionEvents(playerName?: string): void
+
+    /**
+     * Set the rendering resolution of a single player specified in the first parameter
+     * @return Amount of players that have been set the resolution
+     */
+    setRenderResolution(playerName: string, width: number, height: number): number
+
+    /**
+     * Get the number of widgets that's been added
+     */
+    getWidgetCount(): number
+
+    /**
+     * Remove a widget
+     * @param widgetId The ID of the widget, can be obtained with {@link OGIWidget.getID}
+     * @return Whether the widget can be found and successfully removed 
+     */
+    removeWidget(widgetId: number): boolean 
+
+    /**
+     * Remove all the widgets
+     * @return Is the operation successfully operated
+     */
+    removeAll(): boolean
+
+
+    addCube3D(): OGCube3D
+    addText2D(): OGText2D
+    addText3D(): OGText3D
+    addItem2D(): OGItem2D
+    addItem3D(): OGItem3D
+    addCustom2D(): OGCustom2D
+    addCustom3D(): OGCustom3D
+    addOBJModel2D(): OGOBJModel2D
+    addOBJModel3D(): OGOBJModel3D
+    addBox2D(): OGBox2D
+    addEntityTracker3D(): OGEntityTracker3D
+
+    /**
+     * Gets all true-type fonts on the server. The data can't be used directly - the first 2 element will be a warning message: "this method only returns fonts that are available on the server side" and "client fonts probably differ"
+     * The returned font name can be used directly
+     * @deprecated you shouldn't use the value returned by this list unless it's single player, or you're sure every player has the same fonts installed
+     */
+    getFonts(): string[]
+
+    /**
+     * Set the terminal's display name that will be shown in OpenGlasses configuration menu and link request menu
+     * @return Whether the terminal name has been successfully set or not
+     */
+    setTerminalName(): boolean
+
+    /**
+     * @return Returns the terminal name
+     */
+    getTerminalName(): string
+
+    /**
+     * Set the rendering position mode, can be relative or absolute.
+     * If absolute, the center position will be 0, 0, 0 of the world
+     * If relative (default value), the center position will be the terminal's location (or the machine with the OpenGlasses card installed)
+     */
+    setRenderPosition(mode: "absolute" | "relative"): boolean
+
+    /**
+     * Get the rendering position mode, can be relative or absolute.
+     * @see {@link setRenderPosition}
+     */
+    getRenderPosition(): "absolute" | "relative"
+
+    /**
+     * List all widgets. Can be casted to either LuaTable<string, () => OGIWidget> or LuaTable<string, {getType(): string}>
+     */
+    widgets(): LuaTable<string, () => OGIWidget> | LuaTable<string, {getType(): string}>
+
+    /**
+     * Generates a new component id. All linked glasses will be disconnected
+     */
+    newUniqueKey(): string
+
+    /**
+     * Get the user's position relatively to the center position that can be changed by {@link setRenderPosition} and can be gotten by {@link getRenderPosition}.
+     * @warning The machine must have navigation upgrade installed, which can be installed with anvil
+     */
+    getUserPosition(player: string): Vector3 | InternalError
+
+    /**
+     * Get which block is the user looking at, entity is currently not supported.
+     * @warning The machine must have navigation upgrade and geolyzer installed, which can be installed with anvil
+     */
+    getUserLookingAt(player: string): OGRayTracingBlockResult | OGRayTracingMissedResult | InternalError
+}
+
 
 
 /////////////////// Minecraft Forge (Provided by OpenComputer) ///////////////////

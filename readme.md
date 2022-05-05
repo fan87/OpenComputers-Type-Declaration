@@ -20,8 +20,6 @@ An unofficial OpenComputers binding/declaration for Typescript
 
 ## Setup
 
-> :warning: I'm not a Node.js user, so If I did anything wrong, feel free to let me know.
-
 In-order to use this binding, you have to use [`TypescriptToLua`](https://typescripttolua.github.io/).You can check its [Getting Started](https://typescripttolua.github.io/docs/getting-started) chapter for setting TypescriptToLua up.
 
 After that, you can start adding dependencies and set this up.
@@ -33,7 +31,7 @@ After that, you can start adding dependencies and set this up.
 {
     "compilerOptions": {
         "outDir": "dist/", // Change it to anything you like
-        "types": ["typescript-to-lua/language-extensions", "lua-types/5.2"], // Language extension provides types like `LuaMultiReturn`, and lua-types provides type declaration of lua's standard library
+        "types": ["typescript-to-lua/language-extensions", "lua-types/5.2", "opencomputers-type-declaration"], // Language extension provides types like `LuaMultiReturn`, and lua-types provides type declaration of lua's standard library
         "target": "es6" // Langauge Extensions dies without it. Don't know why, and it's probably not the best way to fix this, but it works
     },
     "include": [
@@ -60,9 +58,7 @@ After that, you can start adding dependencies and set this up.
   }
 ```
 
-4. Copy the files in this repository to the `src/` directory. You can delete `test.ts` if you want - it's an example, and also a script that tests if the binding works. Although It doesn't test everything, but at least you can make sure that it actually works.
-
-5. If you want to learn more, please check the `test.ts`
+4. If you want to learn more, please check the `test.ts` in the GitHub repository
 
 ## Writing Declaration - Tutorial/Guide
 
