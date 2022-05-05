@@ -1,5 +1,5 @@
 {
-  "name": "opencomputers-type-declaration",
+  "name": "opencomputers-typescript-type-declaration",
   "version": "1.0.0",
   "description": "A TypeScript binding for OpenComputers API (Including integrations)",
   "scripts": {
