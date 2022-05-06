@@ -1,6 +1,6 @@
 {
   "name": "opencomputers-typescript-type-declaration",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A TypeScript binding for OpenComputers API (Including integrations)",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
