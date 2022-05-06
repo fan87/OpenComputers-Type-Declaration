@@ -4972,7 +4972,7 @@ interface OGRayTracingMissedResult {
 /**
  * @noSelf
  */
-interface DComponentOpenGlassesHost extends IComponent {
+interface ComponentOpenGlassesHost extends IComponent {
     /**
      * Link with a player / multiple players. By leaving no parameters or "" (empty string) as parameter, it will send start linking with everyone that can be linked by the terminal. Here're rules to connect to the player:
      * 1. Distance to the player must be less than 64 (Un-configurable)
@@ -5401,7 +5401,7 @@ interface ComponentRefinedStorage extends IComponent {
     /**
      * Gets an item from the network.
     */
-    getItem(stack:ItemStackFilter, compareMeta?:boolean, compareNBT?:boolean): ItemStack
+    getItem(stack:ItemStackFilter, compareMeta?:boolean, compareNBT?:boolean): ItemStack | null
         
     /**
      * Gets a list of all items in this network.

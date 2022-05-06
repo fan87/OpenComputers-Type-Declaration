@@ -39,7 +39,9 @@ After that, you can start adding dependencies and set this up.
     ],
     "tstl": {
         "noHeader": true, // Well, if you want to, you can add headers back
-        "luaTarget": "5.3" // OpenComputer supports 5.3, so I'll be using 5.3 in this case
+        "luaTarget": "5.3", // OpenComputer supports 5.3, so I'll be using 5.3 in this case
+        "noResolvePaths": ["colors", "component", "computer", "event", "filesystem", "internet", "keyboard", "note", "os", "process", "robot", "serialization", "shell", "sides", "term", "text", "thread", "transformers", "unicode", "uuid"] // It's in /lib/, so it won't try and reolsve those libraries provided by OpenOS
+
     }
 }
 ```
