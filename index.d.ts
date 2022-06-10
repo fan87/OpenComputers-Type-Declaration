@@ -997,7 +997,8 @@ declare module "event" {
      * @param timeout if passed the function will wait for a new event for this many seconds at maximum then returns `nil` if no event was queued during that time.
      * @param name an event pattern that will act as a filter. If given then only events that match this pattern will be returned. Can be `nil` in which case the event names will not be filtered. See `string.match` on how to use patterns.**…** - any number of parameters in the same order as defined by the [signal](https://ocdoc.cil.li/component:signals) that is expected. Those arguments will act as filters for the additional arguments returned by the signal. Direct equality is used to determine if the argument is equal to the given filter. Can be `nil` in which case this particular argument will not be filtered.Filter example:The `touch` signal (when a player clicks on a tier two or three screen) has the signature `screenX: number, screenY: number, playerName: string`To only pull clicks by player “Steve” you'd do:`local _, x, y = event.pull("touch", nil, nil, "Steve")`
     */
-    export function pull(timeout?: number, name?: string, ...extra: any[]): LuaMultiReturn<[string, ...any]>
+    export function pull(timeout?: number, name?: string, ...extra: any[]): LuaMultiReturn<[...any]>
+    export function pull(name?: string, ...extra: any[]): LuaMultiReturn<[...any]>
 
     /**
      * (Since 1.5.9) Pulls and returns the next available event from the queue, or waits until one becomes available but allows filtering by specifying filter function. 
