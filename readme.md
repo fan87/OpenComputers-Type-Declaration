@@ -215,7 +215,7 @@ Also if there is description in the official document, you should add JSDoc. Ple
 
 ## Coverage
 
-1. Full integartion of IC2 provided by OC
+1. Full integartion of IC2 provided by OC (Includes Undocumented)
 
    - Requires `Adapter` block
 
@@ -224,7 +224,7 @@ Also if there is description in the official document, you should add JSDoc. Ple
    3. Reactor/Chamber/Redstone Port
    4. MassFab
 
-2. Full integration of Minecraft provided by OC
+2. Full integration of Minecraft provided by OC (Includes Undocumented)
 
    - Requires `Adapter` block
 
@@ -240,29 +240,29 @@ Also if there is description in the official document, you should add JSDoc. Ple
    10. Note Block
    11. Juke Box (Record Player)
 
-3. Full integration of Refined Storage provided by Refined Storage
+3. Full integration of Refined Storage provided by Refined Storage (Includes Undocumented)
 
    - Requires `Interface` block
 
-4. Full integration of Minecraft Forge provided by OC
+4. Full integration of Minecraft Forge provided by OC (Includes Undocumented)
 
    - Requires `Adapter` Block
 
    1. Forge Energy Storage
 
-5. Full integration of Ender Storage provided by OC
+5. Full integration of Ender Storage provided by OC (Includes Undocumented)
 
    - Requires `Adapter` Block
 
-6. Still WIP OpenGlasses support
+6. SFull (brain hurting) integration of OpenGlasses provided by OpenGlasses/OG  (Includes Undocumented)
 
-   - planned
+   - Entire thing, include mapping of 2D, 3D objects, glass terminal, and **functions that aren't listed on their API document** (hint: there're quiet a lot)
 
-7. Full OpenOS API
+7. Full OpenOS API (Only Documented)
 
-8. Full OpenComputer's Standard Library
+8. Full OpenComputer's Standard Library (Only Documented)
 
-9. Every single built-in components
+9. Every single built-in components (Only Documented)
 
 ## Contribution
 
