@@ -1,4 +1,4 @@
-/// <reference types="typescript-to-lua/language-extensions" />
+/// <reference types="@typescript-to-lua/language-extensions" />
 /// <reference types="lua-types/5.3" />
 //////////////////////////////////////////////////////////////////////////////
 //                     GNU GENERAL PUBLIC LICENSE                           //
@@ -1241,7 +1241,7 @@ declare module "robot" {
     /**
      * Select the specified tank. This determines which tank most operations operate on.
     */
-    export function selectTank(tank): void
+    export function selectTank(tank: any): void
 
     /**
      * The the current fluid level in the specified tank, or, if none is specified, the selected tank.
@@ -1486,7 +1486,7 @@ declare module "term" {
     /**
      * (new in OpenOS 1.6)Binds a `gpu` proxy (not address) to the terminal. This method is called automatically during boot when the gpu and screen become available. Note that if manually rebinding a terminal to a screen with different width and height, the terminal draw area will be truncated and not maximized. This changes the gpu used in all terminal output, not just via the term api, i.e. `io.write`, `print`, `io.stdout:write`, etc all use the same output stream, and term.bind is used to change the `gpu` used.
     */
-    export function bind(gpu): void
+    export function bind(gpu: ComponentGpu): void
 
     /**
      * (new in OpenOS 1.6)Convenience method, simply calls `getScreen` on the terminal's bound gpu (see `term.bind`)
@@ -2057,7 +2057,7 @@ interface ComponentDataCardT3 extends ComponentDataCardT2 {
      * Key types include “ec-public” and “ec-private”. Keys can be serialized with
      * `key.serialize():string` Keys also contain the function `key.isPublic():boolean`
     */
-    generateKeyPair(bitLen? :number):ECUserdata, ECUserdata
+    generateKeyPair(bitLen? :number): [ECUserdata, ECUserdata]
 
     /**
      * Generates a signiture of data using a private key. If signature is present
@@ -3096,7 +3096,7 @@ interface ComponentGpu extends IComponent {
      * Gets the current background color. This background color is applied to all “pixels” that get changed by other operations.
      * Note that the returned number is either an RGB value in hexadecimal format, i.e. `0xRRGGBB`, or a palette index. The second returned value indicates which of the two it is (`true` for palette color, `false` for RGB value).
     */
-    getBackground(): number, boolean
+    getBackground(): [number, boolean]
 
     /**
      * Sets the background color to apply to “pixels” modified by other operations from now on. The returned value is the old background color, as the actual value it was set to (i.e. not compressed to the color space currently set). The first value is the previous color as an RGB value. If the color was from the palette, the second value will be the index in the palette. Otherwise it will be `nil`. Note that the color is expected to be specified in hexadecimal RGB format, i.e. `0xRRGGBB`. This is to allow uniform color operations regardless of the color depth supported by the screen and GPU.
@@ -4046,7 +4046,7 @@ interface ComponentTransposer extends IComponent {
     /**
      * Transfer some fluids between two fluid handlers (pipes or tanks, etc). `sourceSide` is the side pulled from and `sinkSide` is the side transferred to. The side value is a integral value representing the cardinal directions (east, west, south, north), up, and down. The `sides` library has these values for convenience. `count` is the number of millibuckets to transfers. Returns true and the number of millibuckets transfered on success, or false and an error message on failure.
     */
-    transferFluid(sourceSide:number, sinkSide:number, count:number):boolean, number
+    transferFluid(sourceSide:number, sinkSide:number, count:number): [boolean, number]
     
     /**
      * Store an item stack description in the specified slot of the database with the specified address.
